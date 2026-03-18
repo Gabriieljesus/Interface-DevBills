@@ -17,7 +17,7 @@ const Login = () => {
 
   useEffect(() => {
     if(authState.user && !authState.loading){
-      navigate('/login')
+      navigate('/dashboard')
     }
   }, [authState.user, authState.loading, navigate]);
 
