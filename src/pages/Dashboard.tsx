@@ -6,6 +6,7 @@ const Dashboard = () => {
 
     async function getTransactions() {
       const response = await api.get('/transactions')
+      
       console.log(response)
     }
 

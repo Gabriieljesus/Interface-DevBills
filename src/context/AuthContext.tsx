@@ -2,7 +2,6 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from "
 import type { AuthState } from "../types/auth";
 import { signInWithPopup, onAuthStateChanged, signOut as firebaseSignOut } from "firebase/auth";
 import { firebaseAuth, googleAuthProvider } from "../config/firebase";
-
 interface AuthContextProps {
   authState: AuthState,
   signWithGoogle: () => Promise<void>;
@@ -19,9 +18,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   });
 
   useEffect(() => {
-    const onSubscribe = onAuthStateChanged
+    const unSubscribe = onAuthStateChanged
       (firebaseAuth, (user) => {
         if (user) {
+          console.log(user)
           setAuthState({
             user: {
               uid: user.uid,
@@ -41,7 +41,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       },
       );
 
-    return () => onSubscribe();
+    return () => unSubscribe();
   }, [])
 
   const signWithGoogle = async (): Promise<void> => {
