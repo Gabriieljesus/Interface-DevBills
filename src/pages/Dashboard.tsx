@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
 import MonthYearSelect from "../components/MonthYearSelect";
-import { getTransactionsSummary, } from "../services/transactionService";
-import type { TransactionSummary } from "../types/transactions";
+import { getTransactionsMonthly, getTransactionsSummary, } from "../services/transactionService";
+import type { MonthlyItem, TransactionSummary } from "../types/transactions";
 import Card from "../components/Card";
-import { ArrowDown, ArrowUp, TrendingUp, Wallet } from "lucide-react";
+import { ArrowDown, ArrowUp, Calendar, TrendingUp, Wallet } from "lucide-react";
 import { formatCurrency } from "../utils/formatters";
-import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
+import { Bar, BarChart, CartesianGrid, Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 const initialSummary: TransactionSummary = {
   balance: 0,
@@ -26,15 +26,28 @@ const Dashboard = () => {
   const [year, setYear] = useState<number>(currentDate.getFullYear());
   const [month, setMonth] = useState(currentDate.getMonth() + 1);
   const [summary, setSummary] = useState<TransactionSummary>(initialSummary);
+  const [monthlyItemsData, setMonthlyItemsData] = useState<MonthlyItem[]>([]);
 
   useEffect(() => {
     async function loadTransactionsSummary() {
       const response = await getTransactionsSummary(month, year);
+
       console.log(response)
       setSummary(response)
     }
 
     loadTransactionsSummary();
+  }, [month, year])
+
+  useEffect(() => {
+    async function loadTransactionsMonthly() {
+      const response = await getTransactionsMonthly(month, year, 5);
+
+      console.log(response)
+      setMonthlyItemsData(response.history)
+    }
+
+    loadTransactionsMonthly();
   }, [month, year])
 
    const renderPieChartLabel = (props: any): string => {
@@ -126,6 +139,49 @@ const Dashboard = () => {
             </div>
           )}
         </Card>
+        <Card
+          icon={<Calendar size={20} className="text-primary-500" />}
+          title="Histórico Mensal"
+          className="min-h-80 p-2.5"
+        >
+          <div className="h-72 mt-4">
+            {monthlyItemsData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={monthlyItemsData} margin={{ left: 40 }}>
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    stroke="rgba(255,255,255,0.1)"
+                  />
+                  <XAxis
+                    dataKey="name"
+                    stroke="#94a3b8"
+                    tick={{ style: { textTransform: 'capitalize' } }}
+                  />
+                  <YAxis
+                    stroke="#94a3b8"
+                    tickFormatter={formatCurrency}
+                    tick={{ style: { fontSize: 14 } }}
+                  />
+                  <Tooltip
+                    formatter={(value) => typeof value === 'number' ? formatCurrency(value) : ''}
+                    contentStyle={{
+                      backgroundColor: '#1a1a1a',
+                      borderColor: '#2a2a2a',
+                    }}
+                    labelStyle={{ color: '#f8f8f8' }}
+                  />
+                  <Legend />
+                  <Bar dataKey="expenses" name="Despesas" fill="#d23d5d" />
+                  <Bar dataKey="income" name="Receitas" fill="#37e359" />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex items-center justify-center h-64 text-gray-500">
+                Nenhuma despesa registrada no período.
+              </div>
+            )}
+          </div>
+        </Card>             
       </div>
     </div>
   );
