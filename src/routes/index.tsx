@@ -5,6 +5,8 @@ import { AuthProvider } from "../context/AuthContext";
 import Dashboard from "../pages/Dashboard";
 import PrivateRoutes from "./PrivateRoutes";
 import AppLayout from "../layout/AppLayout";
+import Transactions from "../pages/Transactions";
+import TransactionsForm from "../pages/TransactionsForm";
 
 const AppRoutes = () => {
 
@@ -16,7 +18,9 @@ const AppRoutes = () => {
           <Route path="/login" element={<Login />} />
           <Route element={<PrivateRoutes />}>
             <Route element={<AppLayout />}>
-              <Route path="dashboard" element={<Dashboard />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/transacoes" element={<Transactions />} />
+              <Route path="/transacoes/nova" element={<TransactionsForm />} />
             </Route>
           </Route>
           <Route path="*" element={<h2>Página não encontrada</h2>} />
