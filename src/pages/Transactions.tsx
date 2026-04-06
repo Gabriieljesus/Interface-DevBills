@@ -1,12 +1,14 @@
-import { AlertCircle, Plus, Search } from "lucide-react";
+import { AlertCircle, ArrowDown, ArrowUp, Plus, Search, Trash2 } from "lucide-react";
 import { Link } from "react-router";
 import MonthYearSelect from "../components/MonthYearSelect";
 import { useEffect, useState } from "react";
 import Input from "../components/Input";
 import Card from "../components/Card";
-import type { Transaction } from "../types/transactions";
-import { getTransactions } from "../services/transactionService";
+import { TransactionType, type Transaction } from "../types/transactions";
+import { deleteTransaction, getTransactions } from "../services/transactionService";
 import Button from "../components/Button";
+import { formatCurrency, formatDate } from "../utils/formatters";
+import { toast } from "react-toastify";
 
 const Transactions = () => {
   const currentDate = new Date();
@@ -15,6 +17,7 @@ const Transactions = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [deletingId, setDeletingId] = useState<string>("");
 
   const fetchTransactions = async () => {
     try {
@@ -26,6 +29,27 @@ const Transactions = () => {
       setError("Não foi possível carregar as transações. Por favor, tente novamente.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDelete = async(id: string): Promise<void> => {
+    try {
+      setDeletingId(id);
+      await deleteTransaction(id);
+      toast.success("Transação deletada com sucesso!");
+      setTransactions((prev) => prev.filter((t) => t.id !== id));
+
+    } catch (error) {
+      console.error(error);
+      toast.error("Falha ao deletar Transacão. Por favor, tente novamente.");
+    } finally {
+      setDeletingId("");
+    }
+  };
+
+  const confirmDelete = (id: string): void => {
+    if (window.confirm("Tem certeza que deseja deletar esta transação?")) {
+      handleDelete(id);
     }
   };
 
@@ -88,7 +112,87 @@ const Transactions = () => {
 
           </div>
         ) : (
-          <div>Transações</div>
+          <div className="overflow-x-auto">
+            <table className="divide-y divide-gray-700 min-h-full w-full">
+              <thead>
+                <tr>
+                  <th scope="col" className="px-3 py 3 text-left text-xs font-medium text-gray-400 uppercase">
+                    Descrição
+                  </th>
+                  <th scope="col" className="px-3 py 3 text-left text-xs font-medium text-gray-400 uppercase">
+                    Data
+                  </th>
+                  <th scope="col" className="px-3 py 3 text-left text-xs font-medium text-gray-400 uppercase">
+                    Categoria
+                  </th>
+                  <th scope="col" className="px-3 py 3 text-left text-xs font-medium text-gray-400 uppercase">
+                    Valor
+                  </th>
+                  <th scope="col" className="px-3 py 3 text-left text-xs font-medium text-gray-400 uppercase">
+                    {" "}
+                  </th>
+                </tr>
+              </thead>
+              
+              <tbody className="divide-y divide-gray-700">
+                {transactions.map((transaction) => (
+                  <tr key={transaction.id} className="hover:bg-gray-800">
+                    <td className="px-3 py-4 text-gray-400 whitespace-nowrap">
+                      <div className="flex items-center">
+                        <div className="mr-2">
+                          {transaction.type === TransactionType.INCOME ? (
+                            <ArrowUp className="w-4 h-4 text-primary-500"/>
+                          ) : (
+                            <ArrowDown className="w-4 h-4 text-red-500"/>
+                          )}
+                        </div>
+                        <span className="text-sm font-medium text-gray-50">
+                          {transaction.description}
+                        </span>
+                      </div>
+                    </td>
+
+                    <td className="px-3 py-4  whitespace-nowrap">
+                      {formatDate(transaction.date)}
+                    </td>
+
+                    <td className="px-3 py-4  whitespace-nowrap">
+                      <div className="flex items-center">
+                        <div className="w-2 h-2 rounded-full mr-2" style={{ backgroundColor: transaction.category.color }} />
+
+                      <span className="text-sm  text-gray-400">
+                        {transaction.category.name}
+                      </span>
+                      </div>
+                    </td>
+
+                    <td className="px-3 py-4  whitespace-nowrap">
+                      <span className={`${transaction.type === TransactionType.INCOME ? 'text-primary-500' : 'text-red-500'} text-sm font-semibold`}>
+                        {formatCurrency(transaction.amount)}
+                      </span>
+                    </td>
+
+                    <td className="px-3 py-4  whitespace-nowrap cursor-pointer">
+                      <button 
+                        type="button"
+                        onClick={() => confirmDelete(transaction.id)}
+                        className="text-red-400 hover:text-red-400 rounded-full cursor-pointer"
+                        disabled={deletingId === transaction.id}
+                      >
+                        {deletingId === transaction.id ? (
+                          <span className="inline-block w-4 h-4 border-2 border-red-500 border-t-transparent rounded-ful animate-spin" />
+
+                        ) : (
+                          <Trash2 className="w-4 h-4 "/>
+                        )}
+                        
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </Card>
     </div>
