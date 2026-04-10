@@ -24,7 +24,6 @@ const TransactionTypeSelector = ({value, onChange, id }: TransactionTypeSelectio
 
   return (
     <fieldset id={id} className="grid grid-cols-2 gap-4">
-      <legend>Tipo de Transação</legend>
 
       {transactionsTypeButton.map((item) => (
         <button 
