@@ -32,6 +32,7 @@ const TransactionsForm = () => {
   const [formData, setFormData] = useState<FormData>(initialFormData);
   const [error, setError] = useState<string | null>(null)
   const [fieldErrors, setFieldErrors] = useState<Partial<Record<keyof FormData, string>>>({})
+  const [loading, setLoading] = useState<boolean>(false);
   const formId = useId();
   const navigate = useNavigate();
 
@@ -89,6 +90,7 @@ const TransactionsForm = () => {
 
   const handleSubmit = async (event: FormEvent): Promise<void> => {
     event.preventDefault();
+    setLoading(true);
     setError(null)
 
     try {
@@ -101,7 +103,7 @@ const TransactionsForm = () => {
         amount: formData.amount,
         categoryId: formData.categoryId,
         type: formData.type,
-        date: new Date(formData.date).toISOString(),
+        date: `${formData.date}T12:00:00.000Z`,
       }
 
       await createTransaction(transactionData)
@@ -109,6 +111,8 @@ const TransactionsForm = () => {
       navigate("/transacoes")
     } catch (error) {
       toast.error("Falha ao adicionar transação")
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -186,9 +190,21 @@ const TransactionsForm = () => {
             />
 
             <div className="flex justify-end space-x-3 mt-2 ">
-              <Button variant="outline" onClick={handleCancel} type="button">Cancelar</Button>
-              <Button type="submit" variant={formData.type === TransactionType.EXPENSE ? "danger" : "success"}>
-                <Save className="w-4 h-4 mr-2 " />
+              <Button variant="outline" onClick={handleCancel} type="button" disabled={loading}>
+                Cancelar
+              </Button>
+              <Button
+                disabled={loading}
+                type="submit" 
+                variant={formData.type === TransactionType.EXPENSE ? "danger" : "success"}
+              >
+                {loading ? (
+                  <div className="flex items-center justify-center">
+                    <div className="w-4 h-4 border-4 border-gray-700 border-t-transparent rounded-full animate-spin"/>
+                  </div>
+                ) : (
+                   <Save className="w-4 h-4 mr-2 " />
+                )}
                 Salvar
               </Button>
             </div>
